@@ -1,44 +1,6 @@
 ;; Utility functions
 
-(defun take (n seq)
-  "Returns the first n elements from seq."
-  (if (= n 0)
-      '()
-      (cons (car seq) (take (- n 1) (cdr seq)))))
-
-(defun drop (n seq)
-  "Returns seq without the first n elements."
-  (cond ((= n 0) seq)
-        ((< (length seq) n) '())
-        (t (drop (- n 1) (cdr seq)))))
-            
-(defun n-sized-chunks (n seq)
-  "Returns seq separated into n-sized subsequences."
-  (cond ((null seq) '())
-        ((< (length seq) n)
-         (list seq))
-        (t (cons (take n seq) (n-sized-chunks n (drop n seq))))))
-
-(defun every-nth (n seq)
-  "Every nth element of seq."
-  (labels ((iter (i seq)
-             (if (null seq)
-                 '()
-                 (if (= i 1)
-                     (cons (car seq) (iter n (cdr seq)))
-                     (iter (- i 1) (cdr seq))))))
-    (iter n seq)))
-
-(defun nths (ns seq)
-  "Extract elements at ns positions from seq. ns should be in ascending order."
-  (labels ((iter (n ns seq)
-             (if (or (null seq) (null ns))
-                 '()
-                 (let ((next-n (car ns)))
-                   (if (= n next-n)
-                       (cons (car seq) (iter (1+ n) (cdr ns) (cdr seq)))
-                       (iter (1+ n) ns (cdr seq)))))))
-    (iter 0 ns seq)))
+(quicklisp:quickload "alexandria")
 
 (defun max-by-key (key arg &rest more-args)
   "Max arg as evaluated by key."
@@ -52,3 +14,19 @@
                        (iter xs x-key x)
                        (iter xs key-max arg-max))))))
     (iter more-args (funcall key arg) arg)))
+
+(defun arow (array row)
+  "The given row of the array."
+  (let ((row-length (array-dimension array 1)))
+    (loop for col below row-length collect (aref array row col))))
+
+(defun acol (array col)
+  "The given column of the array."
+  (let ((col-length (array-dimension array 0)))
+    (loop for row below col-length collect (aref array row col))))
+
+(defun matrix-with-insertion (array i j x)
+  "2d array with x inserted at i, j."
+  (let ((array2 (alexandria:copy-array array)))
+    (setf (aref array2 i j) x)
+    array2))

@@ -1,88 +1,125 @@
 ;; Board representation
 
-(defparameter +rows+ 3)
-(defparameter +columns+ 3)
+(defconstant +default-size+ 3)
+(defconstant +empty-space+ '-)
 
-(defparameter *initial-game-board*
-  '(- - -
-    - - -
-    - - -))
+(defclass game-board ()
+  ((size :initarg :size
+         :accessor game-board-size
+         :initform +default-size+
+         :documentation "Number of columns and rows in the game board.")
+   (grid :accessor game-board-grid
+         :initarg :grid
+         :initform nil
+         :documentation "2-dimensional vector of the pieces on the board.")))
 
-(defun print-board (board &optional (stream t))
-  "Prints the game board."
-  (prog nil
-     (mapcar (lambda (row)
-               (format stream "~{~a ~}~%" row))
-             (n-sized-chunks 3 board))))
+(defmethod initialize-instance :after ((board game-board) &key)
+  (let ((grid (game-board-grid board)))
+    (if (null grid)
+        (let ((size (game-board-size board)))
+          (setf (slot-value board 'grid)
+                (make-array `(,size ,size) :initial-element +empty-space+))))))
 
-(defun occupied-X? (space)
-  "Whether given space is occupied by X."
-  (eq space 'X))
+(defmethod print-object ((board game-board) stream)
+  (let ((size (game-board-size board))
+        (grid (game-board-grid board)))
+    (flet ((print-row-divisor ()
+             (loop for i below size do
+                  (format stream "|---")
+                finally (format stream "|~%"))))
+      (loop for i below size
+         initially (print-row-divisor)
+         do (loop for j below size
+               do (format stream "| ~a " (aref grid i j))
+               finally (prog nil
+                          (format stream "|~%")
+                          (print-row-divisor)))))))
 
-(defun occupied-O? (space)
-  "Whether given space is occupied by O."
-  (eq space 'O))
+(defgeneric rows (board)
+  (:documentation "List of rows in board grid."))
 
-(defun empty-space? (space)
-  "Whether given space is empty."
-  (eq space '-))
+(defgeneric columns (board)
+  (:documentation "List of columns in board grid."))
 
-(defun board-with-placement (board piece n)
-  "board with piece placed at the nth position."
-  (append (take n board) (list piece) (drop (1+ n) board)))
+(defgeneric diagonals (board)
+  (:documentation "List of diagonals in board grid."))
 
-(defun moves (board piece)
-  "All possible moves for the given piece on the given board (assuming it is
-the piece's turn)."
-  (let ((bsize (length board)))
-    (labels ((iter (n)
-               (if (= n bsize)
-                   '()
-                   (if (empty-space? (nth n board))
-                       (cons (board-with-placement board piece n)
-                             (iter (1+ n)))
-                       (iter (1+ n))))))
-      (iter 0))))
+(defgeneric lines (board)
+  (:documentation "List of rows, columns, and diagonals in board grid."))
 
-(defun X-moves (board)
-  "All possible moves for x on the given board (assuming it is x's turn)."
-  (moves board 'X))
+(defgeneric valid-move? (board move)
+  (:documentation "Whether move is possible on board."))
 
-(defun O-moves (board)
-  "All possible moves for y on the given board (assuming it is y's turn)."
-  (moves board 'O))
+(defgeneric after-move (board move)
+  (:documentation "The board after the given move."))
 
-(defun rows (board)
-  "List of rows in board."
-  (n-sized-chunks +rows+ board))
+(defgeneric available-moves (board piece)
+  (:documentation "Available moves on board for piece."))
 
-(defun columns (board)
-  "List of columns in board."
-  (apply #'mapcar #'list (rows board)))
+(defgeneric position-empty? (board row column)
+  (:documentation "Whether the given position on the board is empty."))
 
-(defun diagonals (board)
-  "List of diagonals in board."
-  ; just hardcode this for now
-  (list (nths '(0 4 8) board)
-        (nths '(2 4 6) board)))
+(defgeneric positions (board)
+  (:documentation "A list of row, column positions on the board."))
 
-(defun lines (board)
-  "All the possible lines to win on on the board."
+(defmethod positions ((board game-board))
+  (let ((size (game-board-size board)))
+    (apply #'append
+           (loop for i below size
+                collect (loop for j below size
+                             collect (list i j))))))
+
+(defmethod rows ((board game-board))
+  (let ((n-rows (game-board-size board))
+        (grid (game-board-grid board)))
+    (loop for row below n-rows collect (arow grid row))))
+
+(defmethod columns ((board game-board))
+  (let ((n-cols (game-board-size board))
+        (grid (game-board-grid board)))
+    (loop for col below n-cols collect (acol grid col))))
+
+(defmethod diagonals ((board game-board))
+  (let ((size (game-board-size board))
+        (grid (game-board-grid board)))
+    (list
+     (loop for i below size collect (aref grid i i))
+     (loop
+        for i below size
+        for j from (- size 1) downto 0
+          collect (aref grid i j)))))
+
+(defmethod lines ((board game-board))
   (append (rows board)
           (columns board)
           (diagonals board)))
 
-(defun next-player (player)
-  "Next player after player."
-  (if (eq player 'X) 'O 'X))
+(defmethod position-empty? ((board game-board) row column)
+  (let ((grid (game-board-grid board)))
+    (eq (aref grid row column) +empty-space+)))
 
-(defun diff-boards (a b)
-  "Index of first difference in a and b."
-  (labels ((iter (a b n)
-             (if (null a)
-                 nil
-                 (if (not (eq (car a) (car b)))
-                     n
-                     (iter (cdr a) (cdr b) (1+ n))))))
-    (iter a b 0)))
+(defmethod valid-move? ((board game-board) (move game-move))
+  (let ((i (move-row move))
+        (j (move-column move)))
+    (position-empty? board i j)))
 
+(defmethod after-move ((board game-board) (move game-move))
+  (let ((size (game-board-size board))
+        (grid (game-board-grid board))
+        (i (move-row move))
+        (j (move-column move))
+        (piece (move-piece move)))
+    (if (valid-move? board move)
+        (make-instance 'game-board
+                       :size size
+                       :grid (matrix-with-insertion grid i j piece)))))
+
+(defmethod available-moves ((board game-board) piece)
+  (let ((size (game-board-size board)))
+    (apply #'append (loop for i below size
+                       collect (loop for j below size
+                                  when (position-empty? board i j)
+                                  collect (make-instance 'game-move
+                                                         :row i
+                                                         :column j
+                                                         :piece piece))))))

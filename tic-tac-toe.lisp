@@ -1,39 +1,41 @@
 ;; Tic-tac-toe
 
 (load "utils.lisp")
+(load "move.lisp")
 (load "board.lisp")
 
 (defclass game-state ()
   ((board :initarg :board
           :accessor game-state-board
-          :initform *initial-game-board*
           :documentation "The current board")
    (whose-turn :initarg :turn
                :accessor game-state-whose-turn
                :initform 'X
                :documentation "Which player's turn it currently is.")))
 
-(defgeneric branches (state))
-
-(defmethod branches ((state game-state))
-  (let* ((player (game-state-whose-turn state))
-         (next (next-player player)))
-    (mapcar (lambda (board)
-              (make-instance 'game-state :board board :turn next))
-            (moves (game-state-board state) player))))
-
 (defmethod print-object ((state game-state) stream)
-  (print-board (game-state-board state) stream)
+  (print-object (game-state-board state) stream)
   (format stream "~a's turn~%" (game-state-whose-turn state)))
-
-(defparameter *start-state* (make-instance 'game-state))
 
 (defgeneric best-move (state))
 
+(defgeneric branches (state))
+
+(defmethod branches ((state game-state))
+  (mapcar (lambda (move)
+            (after-move state move))
+          (state-available-moves state)))
+
+(defun state-available-moves (state)
+  (let ((board (game-state-board state))
+        (player (game-state-whose-turn state)))
+    (available-moves board player)))
+
 (defmethod best-move ((state game-state))
   "The best move for a player to take in a given state."
-  (apply #'max-by-key (lambda (state)
-                        (- (minimax state))) (branches state)))
+  (apply #'max-by-key (lambda (move)
+                        (- (minimax (after-move state move))))
+         (state-available-moves state)))
 
 (defun wins? (player state)
   (some (lambda (line)
@@ -42,8 +44,9 @@
         (lines (game-state-board state))))
 
 (defun draw? (state)
-  (every (lambda (square)
-           (not (eq square '-))) (game-state-board state)))
+  (let ((board (game-state-board state)))
+    (not (some (lambda (pos)
+                 (position-empty? board (car pos) (cadr pos))) (positions board)))))
 
 (defun minimax (state)
   (let* ((player (game-state-whose-turn state))
@@ -58,22 +61,26 @@
                                  (mapcar #'iter next-states)))))))
       (iter state))))
 
-(defun get-player-move (state)
+(defun get-player-move (state piece)
   (format t "Move? ")
-  (read))
+  (let ((move (read)))
+    (make-instance 'game-move :column (car move) :row (cadr move) :piece piece)))
 
 (defun get-cpu-move (state)
-  (let ((move (best-move state)))
-    (diff-boards (game-state-board state) (game-state-board move))))
+  (best-move state))
 
-(defun apply-move (state move)
+(defun next-player (player)
+  "Next player after player."
+  (if (eq player 'X) 'O 'X))
+
+(defmethod after-move ((state game-state) move)
   (let ((player (game-state-whose-turn state)))
-    (make-instance 'game-state :turn (next-player player)
-                   :board (board-with-placement (game-state-board state) player move))))
+    (make-instance 'game-state
+                   :turn (next-player player)
+                   :board (after-move (game-state-board state) move))))
 
-(defun game-loop ()
-  (let ((player 'X)
-        (cpu 'O))
+(defun game-loop (player size)
+  (let ((cpu (next-player player)))
     (labels ((iter (state)
                (print state)
                (cond ((wins? player state) (format t "You win!"))
@@ -81,8 +88,10 @@
                      ((draw? state) (format t "A draw!"))
                      (t (let* ((whose-turn (game-state-whose-turn state))
                                (move (if (eq whose-turn player)
-                                         (get-player-move state)
+                                         (get-player-move state player)
                                          (get-cpu-move state))))
-                          (iter (apply-move state move)))))))
-      (iter *start-state*))))
-
+                          (iter (after-move state move)))))))
+      (iter (make-instance 'game-state
+                           :turn 'X
+                           :board (make-instance 'game-board
+                                                 :size size))))))
