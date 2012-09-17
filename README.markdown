@@ -1,4 +1,19 @@
 # Tic Tac Toe
 
-Fairly messy implementation of Tic Tac Toe in Common Lisp. I just wanted to
-implement a working version of the Minimax algorithm to help me understand it.
+Implementation of Tic-Tac-Toe with a CPU enemy based on a naive formulation of
+the minimax algorithm. The algorithm currently searches the whole state tree
+up to terminal nodes - this is OK for a 3x3 board, but becomes unfeasibly slow
+for any larger sizes.
+
+Can be installed using ASDF. Relies on the Alexandria package.
+
+# TODO
+
+* Add depth limit to minimax algorithm, with appropriate heuristics function
+* Add alpha-beta pruning
+* Provide a better CLI interface for playing the game
+* Provide a GUI interface for playing the game
+
+# License
+
+Released under the GPL 3.0. See LICENSE.

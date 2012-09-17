@@ -1,5 +1,6 @@
+; Move representation
 
-
+(in-package #:tic-tac-toe)
 
 (defclass game-move ()
   ((piece :initarg :piece
@@ -16,6 +17,3 @@
   (format stream
           "<game-move ~a to (~a, ~a)>"
           (move-piece move) (move-row move) (move-column move)))
-
-
-          

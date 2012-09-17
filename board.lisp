@@ -1,4 +1,15 @@
-;; Board representation
+; Board representation
+
+(in-package #:tic-tac-toe)
+
+(export '(rows
+          columns
+          diagonals
+          lines
+          valid-move?
+          after-move
+          available-moves
+          position-empty?))
 
 (defconstant +default-size+ 3)
 (defconstant +empty-space+ '-)

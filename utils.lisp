@@ -1,6 +1,11 @@
-;; Utility functions
+; Utility functions
 
-(quicklisp:quickload "alexandria")
+(in-package #:tic-tac-toe)
+
+(export '(max-by-key
+          arow
+          acol
+          matrix-with-insertion))
 
 (defun max-by-key (key arg &rest more-args)
   "Max arg as evaluated by key."
