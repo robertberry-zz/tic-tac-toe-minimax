@@ -35,3 +35,27 @@
   (let ((array2 (alexandria:copy-array array)))
     (setf (aref array2 i j) x)
     array2))
+
+(defun matrix-diagonal-tlbr (array)
+  "Elements in the top-left to bottom-right diagonal of the given matrix"
+  (let ((size (array-dimension array 0))) ; height == width
+    (loop for i below size collect (aref array i i))))
+
+(defun matrix-diagonal-bltr (array)
+  "Elements in the bottom-left to top-right diagonal of the given matrix"
+  (let ((size (array-dimension array 0))) ; height == width
+    (loop
+       for i below size
+       for j from (- size 1) downto 0
+       collect (aref array i j))))
+
+(defun matrix-intercepts-tlbr (matrix-size i j)
+  "Whether the given row and column intercept the top-left to bottom-right
+diagonal in a matrix of the given size."
+  (and (= i j)
+       (< i matrix-size)))
+
+(defun matrix-intercepts-bltr (matrix-size i j)
+  "Whether the given row and column intercept the bottom-left to top-right
+diagonal in a matrix of the given size."
+  (= (- matrix-size i 1) j))
