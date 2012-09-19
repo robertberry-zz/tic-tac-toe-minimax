@@ -59,3 +59,8 @@ diagonal in a matrix of the given size."
   "Whether the given row and column intercept the bottom-left to top-right
 diagonal in a matrix of the given size."
   (= (- matrix-size i 1) j))
+
+(defun equals-symbol (symbol)
+  "Returns a predicate for checking whether a symbol is the given symbol."
+  (lambda (x)
+    (eq x symbol)))

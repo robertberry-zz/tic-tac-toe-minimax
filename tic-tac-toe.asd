@@ -1,4 +1,4 @@
-; ASDF
+; Definition file
 
 (defpackage :tic-tac-toe
   (:use :cl :asdf))
@@ -16,5 +16,8 @@
   :components ((:file "utils")
                (:file "move")
                (:file "board")
+               (:file "move-heuristics")
                (:file "state")
+               (:file "state-heuristics")
+               (:file "minimax")
                (:file "tic-tac-toe")))

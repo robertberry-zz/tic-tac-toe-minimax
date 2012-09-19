@@ -1,3 +1,5 @@
+; State representation
+
 (in-package #:tic-tac-toe)
 
 (export '(branches
@@ -40,24 +42,6 @@
   (let ((board (game-state-board state))
         (player (game-state-whose-turn state)))
     (available-moves board player)))
-
-(defmethod best-move ((state game-state))
-  (apply #'max-by-key (lambda (move)
-                        (- (minimax (after-move state move))))
-         (state-available-moves state)))
-
-(defun minimax (state)
-  (let* ((player (game-state-whose-turn state))
-         (enemy (next-player player)))
-    (labels ((iter (state)
-               (let ((next-states (branches state)))
-                 (cond ((null next-states) 0)
-                       ((wins? player state) 1)
-                       ((wins? enemy state) -1)
-                       (t (apply (if (eq (game-state-whose-turn state) player)
-                                     #'max #'min)
-                                 (mapcar #'iter next-states)))))))
-      (iter state))))
 
 (defun wins? (player state)
   (some (lambda (line)
