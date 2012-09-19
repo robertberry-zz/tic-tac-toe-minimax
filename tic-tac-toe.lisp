@@ -4,7 +4,9 @@
 
 (export '(game-loop))
 
+; Pretty rubbish - expects player to enter co-ordinates as a Lisp list. todo: make better 
 (defun get-player-move (piece)
+  "Asks the player for a move."
   (format t "Move? ")
   (let ((move (read)))
     (make-instance 'game-move
@@ -12,10 +14,12 @@
                    :row (cadr move)
                    :piece piece)))
 
+; Gets the next CPU move
 (defun get-cpu-move (state)
   (best-move state))
 
-(defun game-loop (player size)
+(defun game-loop (&optional (player 'X) (size 3))
+  "Start a game as the given player for the given size x size board."
   (let ((cpu (next-player player)))
     (labels ((iter (state)
                (print state)

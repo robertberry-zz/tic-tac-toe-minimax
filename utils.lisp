@@ -64,3 +64,7 @@ diagonal in a matrix of the given size."
   "Returns a predicate for checking whether a symbol is the given symbol."
   (lambda (x)
     (eq x symbol)))
+
+(defun next-player (player)
+  "Next player after player."
+  (if (eq player 'X) 'O 'X))

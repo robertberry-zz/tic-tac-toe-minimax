@@ -1,14 +1,13 @@
-; Minimax scoring algorithm
+; Minimax scoring algorithms
 
 (in-package #:tic-tac-toe)
 
-(defconstant +minimax-depth+ 3)
-(defconstant +end-game-score+ 999999)
+(defconstant +minimax-depth+ 3
+  "Maximum search depth for minimax algorithm.")
 
-(defmethod best-move ((state game-state))
-  (apply #'max-by-key (lambda (move)
-                        (- (minimax (after-move state move) #'score-state +minimax-depth+)))
-         (state-available-moves state)))
+(defconstant +end-game-score+ 999999
+  "Very large score for winning game (should be higher than any score returned
+by a heuristic.")
 
 (defun naive-minimax (state)
   "Naive version of the Minimax algorithm - explores the whole state tree,
@@ -26,6 +25,8 @@ which is infeasibly complicated for anything larger than a 3x3 board."
       (iter state))))
 
 (defun minimax (state heuristic max-depth)
+  "Full minimax. Given a game state, a heuristic function, and a maximum
+depth, calculates the score."
   (let* ((player (game-state-whose-turn state))
          (enemy (next-player player)))
     (labels ((iter (state depth)

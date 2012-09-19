@@ -1,4 +1,4 @@
-; Board representation
+; Board representation (as multi-dimensional array)
 
 (in-package #:tic-tac-toe)
 
@@ -11,8 +11,11 @@
           available-moves
           position-empty?))
 
-(defconstant +default-size+ 3)
-(defconstant +empty-space+ '-)
+(defconstant +default-size+ 3
+  "Default size of a board.")
+
+(defconstant +empty-space+ '-
+  "Symbol used to denote an empty space on the board.")
 
 (defclass game-board ()
   ((size :initarg :size
@@ -23,28 +26,6 @@
          :initarg :grid
          :initform nil
          :documentation "2-dimensional vector of the pieces on the board.")))
-
-(defmethod initialize-instance :after ((board game-board) &key)
-  (let ((grid (game-board-grid board)))
-    (if (null grid)
-        (let ((size (game-board-size board)))
-          (setf (slot-value board 'grid)
-                (make-array `(,size ,size) :initial-element +empty-space+))))))
-
-(defmethod print-object ((board game-board) stream)
-  (let ((size (game-board-size board))
-        (grid (game-board-grid board)))
-    (flet ((print-row-divisor ()
-             (loop for i below size do
-                  (format stream "|---")
-                finally (format stream "|~%"))))
-      (loop for i below size
-         initially (print-row-divisor)
-         do (loop for j below size
-               do (format stream "| ~a " (aref grid i j))
-               finally (prog nil
-                          (format stream "|~%")
-                          (print-row-divisor)))))))
 
 (defgeneric rows (board)
   (:documentation "List of rows in board grid."))
@@ -75,6 +56,28 @@
 
 (defgeneric positions (board)
   (:documentation "A list of row, column positions on the board."))
+
+(defmethod initialize-instance :after ((board game-board) &key)
+  (let ((grid (game-board-grid board)))
+    (if (null grid)
+        (let ((size (game-board-size board)))
+          (setf (slot-value board 'grid)
+                (make-array `(,size ,size) :initial-element +empty-space+))))))
+
+(defmethod print-object ((board game-board) stream)
+  (let ((size (game-board-size board))
+        (grid (game-board-grid board)))
+    (flet ((print-row-divisor ()
+             (loop for i below size do
+                  (format stream "|---")
+                finally (format stream "|~%"))))
+      (loop for i below size
+         initially (print-row-divisor)
+         do (loop for j below size
+               do (format stream "| ~a " (aref grid i j))
+               finally (prog nil
+                          (format stream "|~%")
+                          (print-row-divisor)))))))
 
 (defmethod positions ((board game-board))
   (let ((size (game-board-size board)))
