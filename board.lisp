@@ -67,13 +67,23 @@
 (defmethod print-object ((board game-board) stream)
   (let ((size (game-board-size board))
         (grid (game-board-grid board)))
-    (flet ((print-row-divisor ()
-             (loop for i below size do
+    (flet ((print-row-names ()
+             (format stream "   ")
+             (mapcar (lambda (ch)
+                       (format stream "  ~a " ch)) (letters size))
+             (format stream "~%"))
+           (print-row-divisor ()
+             (loop for i below size
+                  initially (format stream "   ")
+                do
                   (format stream "|---")
                 finally (format stream "|~%"))))
       (loop for i below size
-         initially (print-row-divisor)
+         initially (prog nil
+                      (print-row-names)
+                      (print-row-divisor))
          do (loop for j below size
+                 initially (format stream " ~a " (1+ i))
                do (format stream "| ~a " (aref grid i j))
                finally (prog nil
                           (format stream "|~%")

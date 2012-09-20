@@ -3,7 +3,11 @@
 (in-package #:tic-tac-toe)
 
 (export '(max-by-key
+          letters
+          numbers
+          take
           arow
+          string->list
           acol
           matrix-with-insertion))
 
@@ -19,6 +23,32 @@
                        (iter xs x-key x)
                        (iter xs key-max arg-max))))))
     (iter more-args (funcall key arg) arg)))
+
+(defconstant +alphabet+ "abcdefghijklmnopqrstuvwxyz")
+
+(defun take (n seq)
+  "N elements from seq."
+  (if (or (= n 0) (null seq))
+      nil
+      (cons (car seq) (take (1- n) (cdr seq)))))
+
+(defun string->list (str)
+  (map 'list #'identity str))
+
+(defun letters (n)
+  "A list of n letters from the alphabet."
+  (take n (string->list +alphabet+)))
+
+(defun letter->number (letter)
+  (position letter (letters 26)))
+
+(defun numbers (n)
+  "A list of n ascending integers (starting at 1)."
+  (labels ((iter (i)
+             (if (> i n)
+                 '()
+                 (cons i (iter (1+ i))))))
+    (iter 1)))
 
 (defun arow (array row)
   "The given row of the array."
