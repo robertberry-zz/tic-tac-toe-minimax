@@ -9,9 +9,6 @@ Can be installed using ASDF. Relies on the Alexandria package.
 
 # TODO
 
-* Add depth limit to minimax algorithm, with appropriate heuristics function
-* Add alpha-beta pruning
-* Provide a better CLI interface for playing the game
 * Provide a GUI interface for playing the game
 
 # License
