@@ -23,13 +23,20 @@
 (defgeneric branches (state)
   (:documentation "Other possible states after available moves in this state."))
 
+(defgeneric sorted-branches (state)
+  (:documentation "Child states sorted by how decent the move is predicted to be."))
+
 (defmethod print-object ((state game-state) stream)
   (print-object (game-state-board state) stream)
   (format stream "~a's turn~%" (game-state-whose-turn state)))
 
 (defmethod best-move ((state game-state))
   (apply #'max-by-key (lambda (move)
-                        (- (minimax (after-move state move) #'score-state +minimax-depth+)))
+                        (- (alpha-beta
+                            (after-move state move)
+                            #'score-state
+                            #'sorted-branches
+                            +minimax-depth+)))
          (state-available-moves state)))
 
 (defmethod after-move ((state game-state) move)
@@ -42,6 +49,13 @@
   (mapcar (lambda (move)
             (after-move state move))
           (state-available-moves state)))
+
+(defmethod sorted-branches ((state game-state))
+  (mapcar (lambda (move)
+            (after-move state move))
+          (sort (state-available-moves state) #'>
+                :key (lambda (move)
+                       (move-score-improved (game-state-board state) move)))))
 
 (defun state-available-moves (state)
   "Available moves for the player whose turn it is in the given state."
